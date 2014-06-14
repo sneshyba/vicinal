@@ -7,11 +7,18 @@ import copy
 #xbox=17.9629; ybox=29.3333; zbox=23.334523
 #outfilename = 'spc_4_4_6_v.pdb'
 
-filename = 'spc_10_6_12_v_orig.pdb'
-xbox=44.90725; ybox=45.9565; zbox=44.6822104389
-outfilename = 'spc_10_6_12_v.pdb'
+#filename = 'spc_10_6_12_v_orig.pdb'
+#filename = 'spc_10_6_12_v_origplus1.pdb'
+#filename = 'spc_10_6_12_v_origplus2.pdb'
+#filename = 'spc_10_6_12_v_origplus3.pdb'
+#outfilename = 'spc_10_6_12_v_origplus4.pdb'
+#xbox=44.90725; ybox=45.9565; zbox=44.6822104389
 
-namestem = filename.find('.pdb')
+filename = 'spc_10_6_12_vx_orig.pdb'
+outfilename = 'spc_10_6_12_vx_origplus1.pdb'
+xbox=45.57594; ybox=45.98438; zbox=43.99999
+
+
 
 # Specify which is the exposed surface, and load the slab
 viscinaldir = 'y'; nycel=0
@@ -34,7 +41,7 @@ vs.checkfordefects(nni,xyzO,xyzH1,xyzH2,xyzshift)
 
 # Make new nnitol and,nnltoi arrays that correct for defects
 nnitol_fixed, nnltoi_fixed = vs.fixit(\
-slab, xyzO, xyzH1, xyzH2, xyzshift, nni, nnitol, nnltoi, 2000)
+slab, xyzO, xyzH1, xyzH2, xyzshift, nni, nnitol, nnltoi, 10000)
 
 # Reconstruct & rotate a viscinal slab with defects fixed
 xyzO_fixed, xyzH1_fixed, xyzH2_fixed = \

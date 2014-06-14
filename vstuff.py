@@ -97,7 +97,7 @@ class slab:
         zbox = self.zbox
         nR,dum = xyzO_step1.shape
 
-        if viscinaldir == 'y':  
+        if viscinaldir == 'yz':  
     
             phi = np.arctan(vshift/zbox); print "phi =", phi*180/np.pi
             zboxp = zbox/np.cos(phi)
@@ -142,6 +142,48 @@ class slab:
 	           xyzH1_step2[i,2] = xyzH1_step2[i,2] - zboxp
 	           xyzH2_step2[i,2] = xyzH2_step2[i,2] - zboxp
 
+        elif viscinaldir == 'yx':  
+    
+            phi = np.arctan(vshift/xbox); print "phi =", phi*180/np.pi
+            xboxp = xbox/np.cos(phi)
+            yboxp = ybox*np.cos(phi)
+            zboxp = zbox
+            Rmat = np.array(\
+            [[np.cos(phi),np.sin(phi),0],[-np.sin(phi),np.cos(phi),0],[0,0,1]])
+            line1_m = np.tan(phi)
+            line1_b = ybox
+            line2_m = line1_m
+            line2_b = 0.0
+        
+            for i in range(nR):
+   	        if (xyzO_step1[i,1] > line1_b + line1_m*xyzO_step1[i,0]):
+	           xyzO_step1[i,1] = xyzO_step1[i,1] - ybox
+	           xyzH1_step1[i,1] = xyzH1_step1[i,1] - ybox
+	           xyzH2_step1[i,1] = xyzH2_step1[i,1] - ybox
+	        if (xyzO_step1[i,1] < line2_b + line2_m*xyzO_step1[i,0]):
+	           xyzO_step1[i,1] = xyzO_step1[i,1] + ybox
+	           xyzH1_step1[i,1] = xyzH1_step1[i,1] + ybox
+	           xyzH2_step1[i,1] = xyzH2_step1[i,1] + ybox
+	        xyzO_step2[i,:] = np.dot(Rmat,xyzO_step1[i,:])
+	        xyzH1_step2[i,:] = np.dot(Rmat,xyzH1_step1[i,:])
+	        xyzH2_step2[i,:] = np.dot(Rmat,xyzH2_step1[i,:])
+	        if (xyzO_step2[i,0]<0):
+	           xyzO_step2[i,0] = xyzO_step2[i,0] + xboxp
+	           xyzH1_step2[i,0] = xyzH1_step2[i,0] + xboxp
+	           xyzH2_step2[i,0] = xyzH2_step2[i,0] + xboxp
+	        if (xyzO_step2[i,0]<0):
+	           xyzO_step2[i,0] = xyzO_step2[i,0] + xboxp
+	           xyzH1_step2[i,0] = xyzH1_step2[i,0] + xboxp
+	           xyzH2_step2[i,0] = xyzH2_step2[i,0] + xboxp
+	        if (xyzO_step2[i,0]>xboxp):
+	           xyzO_step2[i,0] = xyzO_step2[i,0] - xboxp
+	           xyzH1_step2[i,0] = xyzH1_step2[i,0] - xboxp
+	           xyzH2_step2[i,0] = xyzH2_step2[i,0] - xboxp
+	        if (xyzO_step2[i,0]>xboxp):
+	           xyzO_step2[i,0] = xyzO_step2[i,0] - xboxp
+	           xyzH1_step2[i,0] = xyzH1_step2[i,0] - xboxp
+	           xyzH2_step2[i,0] = xyzH2_step2[i,0] - xboxp
+
         else:
             print "Not implemented yet"
  
@@ -168,7 +210,7 @@ class slab:
 
 
 
-def loadit(filename, nx, ny, nz, viscinaldir='y', nycel=1):
+def loadit(filename, nx, ny, nz, viscinaldir='yz', nycel=1):
 
     # These are cell dimensions
     xcel = 4.4907312
@@ -183,12 +225,18 @@ def loadit(filename, nx, ny, nz, viscinaldir='y', nycel=1):
     'pdb', filename); xbox = xcel*nx; ybox = ycel*ny; zbox = zcel*nz
 
     # Set the shift information according to the viscinal surface we want
-    if viscinaldir == 'y':
+    if viscinaldir == 'yz':
         vshift = ycel*nycel # This is the viscinal shift
         shift = np.array([\
-            [ xbox,       0,        0      ], \
-            [  0,        ybox+10,   0,     ], \
-            [  0,        vshift,     zbox    ]])
+            [ xbox,       0,          0      ], \
+            [ 0,          ybox+10,    0,     ], \
+            [ 0,          vshift,     zbox   ]])
+    elif viscinaldir == 'yx':
+        vshift = ycel*nycel # This is the viscinal shift
+        shift = np.array([\
+            [ xbox,       0,         0       ], \
+            [ 0,          ybox+10,   0,      ], \
+            [ vshift,     0,         zbox    ]])
     else:
         print "Not implemented yet"
         #break
@@ -835,6 +883,154 @@ def fixit(slab, xyzO, xyzH1, xyzH2, xyzshift, nni, nnitol_in, nnltoi_in, nprop):
             vdipole_1 = xyzO_1-(xyzH1_1+xyzH2_1)/2
             slabdipole_1 = slabdipole -vdipole_icurrent +vdipole_1
             size_1 = np.sqrt(np.sum(slabdipole_1*slabdipole_1))
+            
+            # Mix it up sometimes
+            if np.mod(icount,10) == 0:
+                print "mixing it up ..."
+                temp = copy.copy(size_1)
+                size_1 = copy.copy(size_0)
+                size_0 = copy.copy(temp)          
+            print 'D ', icount, size_0, size_1, len(Ddefect), len(Adefect)
+            
+            if (size_0 < size_1) and size_0 < threshold:
+                nnitol = copy.deepcopy(nnitol_0)
+                nnltoi = copy.deepcopy(nnltoi_0)
+                xyzO[i] = copy.deepcopy(xyzO_0)
+                xyzH1[i] = copy.deepcopy(xyzH1_0)
+                xyzH2[i] = copy.deepcopy(xyzH2_0)
+                slabdipole = copy.deepcopy(slabdipole_0)
+                if len(Ddefect > 0):
+                    nnitol,nnltoi = fixsurface(nni,nnitol,nnltoi)
+                Ddefect, Adefect = finddefects(nni,nnltoi,nnitol)
+                dosomething = True
+            elif (size_1 < size_0) and size_1 < threshold:
+                nnitol = copy.deepcopy(nnitol_1)
+                nnltoi = copy.deepcopy(nnltoi_1)
+                xyzO[i] = copy.deepcopy(xyzO_1)
+                xyzH1[i] = copy.deepcopy(xyzH1_1)
+                xyzH2[i] = copy.deepcopy(xyzH2_1)
+                slabdipole = copy.deepcopy(slabdipole_1)
+                if len(Ddefect > 0):
+                    nnitol,nnltoi = fixsurface(nni,nnitol,nnltoi)
+                Ddefect, Adefect = finddefects(nni,nnltoi,nnitol)
+                dosomething = True
+
+        if len(Adefect) > 0:
+            icount += 1
+            m = random.randint(0,len(Adefect)-1)
+            i = Adefect[m,0]
+            l = Adefect[m,1]
+            klofi = np.squeeze(np.argwhere(nni[i]==l))
+            kiofl = np.squeeze(np.argwhere(nni[l]==i))  
+     
+            # make a note of the current dipole of the ith residue
+            vdipole_icurrent = xyzO[i]-(xyzH1[i]+xyzH2[i])/2
+
+            # Decide on a new nearest neighbor to point this lone pair to
+            knonzeros=np.squeeze(np.argwhere(nnitol[i]!=0))
+            klofip_0 = knonzeros[0]
+            klofip_1 = knonzeros[1]
+            
+            #ikrandom = random.randint(0,len(knonzeros)-1) #sloppy random index
+            #klofip = knonzeros[ikrandom]
+            nnitol_0, nnltoi_0 = maketheAflop(nni,i,l,kiofl,klofi,klofip_0,nnitol,nnltoi)
+            xyzO_0, xyzH1_0, xyzH2_0 = reconstructone(xyzO, xyzH1, xyzH2, nni, nnitol_0, xyzshift, i)
+            vdipole_0 = xyzO_0-(xyzH1_0+xyzH2_0)/2
+            slabdipole_0 = slabdipole -vdipole_icurrent +vdipole_0
+            size_0 = np.sqrt(np.sum(slabdipole_0*slabdipole_0))
+
+            nnitol_1, nnltoi_1 = maketheAflop(nni,i,l,kiofl,klofi,klofip_1,nnitol,nnltoi)
+            xyzO_1, xyzH1_1, xyzH2_1 = reconstructone(xyzO, xyzH1, xyzH2, nni, nnitol_1, xyzshift, i)
+            vdipole_1 = xyzO_1-(xyzH1_1+xyzH2_1)/2
+            slabdipole_1 = slabdipole -vdipole_icurrent +vdipole_1
+            size_1 = np.sqrt(np.sum(slabdipole_1*slabdipole_1))
+            
+            # Mix it up sometimes
+            if np.mod(icount,10) == 0:
+                print "mixing it up ..."
+                temp = copy.copy(size_1)
+                size_1 = copy.copy(size_0)
+                size_0 = copy.copy(temp)
+            
+                
+            print 'A ', icount, size_0, size_1, len(Ddefect), len(Adefect)
+            if (size_0 < size_1) and size_0 < threshold:
+                nnitol = copy.deepcopy(nnitol_0)
+                nnltoi = copy.deepcopy(nnltoi_0)
+                xyzO[i] = copy.deepcopy(xyzO_0)
+                xyzH1[i] = copy.deepcopy(xyzH1_0)
+                xyzH2[i] = copy.deepcopy(xyzH2_0)
+                slabdipole = copy.deepcopy(slabdipole_0)
+                if len(Adefect) > 0:
+                    nnitol,nnltoi = fixsurface(nni,nnitol,nnltoi)
+                Ddefect, Adefect = finddefects(nni,nnltoi,nnitol)
+                dosomething = True
+            elif (size_1 < size_0) and size_1 < threshold:
+                nnitol = copy.deepcopy(nnitol_1)
+                nnltoi = copy.deepcopy(nnltoi_1)
+                xyzO[i] = copy.deepcopy(xyzO_1)
+                xyzH1[i] = copy.deepcopy(xyzH1_1)
+                xyzH2[i] = copy.deepcopy(xyzH2_1)
+                slabdipole = copy.deepcopy(slabdipole_1)
+                if len(Adefect) > 0:
+                    nnitol,nnltoi = fixsurface(nni,nnitol,nnltoi)
+                Ddefect, Adefect = finddefects(nni,nnltoi,nnitol)
+                dosomething = True
+                        
+
+            #Look over the entire slab for remaining defects
+            #if dosomething:            
+    
+    print "After fixing defects:", len(Ddefect), len(Adefect), \
+    "which took", icount, "iterations"
+
+    return nnitol, nnltoi
+
+def fixitfast(slab, xyzO, xyzH1, xyzH2, xyzshift, nni, nnitol_in, nnltoi_in, nprop):
+    import random
+
+    # Threshold error
+    threshold = 2.5
+    
+    # Fix any surface defects
+    nnitol,nnltoi = fixsurface(nni,nnitol_in,nnltoi_in)
+    Ddefect, Adefect = finddefects(nni,nnltoi,nnitol)
+    print "After initial surface fix:", len(Ddefect), len(Adefect)
+
+    # Get the initial dipole
+    slabdipole = slab.getdipole()
+    
+    #Propagate Adefects
+    icount = 0
+    for iprop in range(nprop):
+        dosomething = False
+        if len(Ddefect) > 0:
+            icount += 1
+            m = random.randint(0,len(Ddefect)-1)
+            i = Ddefect[m,0]
+            l = Ddefect[m,1]
+            klofi = np.squeeze(np.argwhere(nni[i]==l))
+            kiofl = np.squeeze(np.argwhere(nni[l]==i))
+            
+            # make a note of the current dipole of the ith residue
+            vdipole_icurrent = xyzO[i]-(xyzH1[i]+xyzH2[i])/2
+
+            # Decide on a new nearest neighbor to point this Hydrogen to
+            klofip_0 = np.squeeze(np.argwhere(nnitol[i]==0)[0])
+            klofip_1 = np.squeeze(np.argwhere(nnitol[i]==0)[1])
+            
+            # Make the flop for each case
+            nnitol_0, nnltoi_0 = maketheDflop(nni,i,l,kiofl,klofi,klofip_0,nnitol,nnltoi)
+            xyzO_0, xyzH1_0, xyzH2_0 = reconstructone(xyzO, xyzH1, xyzH2, nni, nnitol_0, xyzshift, i)
+            vdipole_0 = xyzO_0-(xyzH1_0+xyzH2_0)/2
+            slabdipole_0 = slabdipole -vdipole_icurrent +vdipole_0
+            size_0 = np.sqrt(np.sum(slabdipole_0*slabdipole_0))
+            
+            nnitol_1, nnltoi_1 = maketheDflop(nni,i,l,kiofl,klofi,klofip_1,nnitol,nnltoi)
+            xyzO_1, xyzH1_1, xyzH2_1 = reconstructone(xyzO, xyzH1, xyzH2, nni, nnitol_1, xyzshift, i)
+            vdipole_1 = xyzO_1-(xyzH1_1+xyzH2_1)/2
+            slabdipole_1 = slabdipole -vdipole_icurrent +vdipole_1
+            size_1 = np.sqrt(np.sum(slabdipole_1*slabdipole_1))
             print 'D ', icount, size_0, size_1, len(Ddefect), len(Adefect)
             
             if (size_0 < size_1) and size_0 < threshold:
@@ -1252,7 +1448,7 @@ def reconstructit(xyzO, xyzH1, xyzH2, nni, nnitol, xyzshift):
     return xyzO_new, xyzH1_new, xyzH2_new
 
             
-def rotateit(xyzO_new, xyzH1_new, xyzH2_new, viscinaldir, \
+def rotateitold(xyzO_new, xyzH1_new, xyzH2_new, viscinaldir, \
 shift, vshift, xbox, ybox, zbox):
     xyzO_step1 = copy.deepcopy(xyzO_new)
     xyzH1_step1 = copy.deepcopy(xyzH1_new)
@@ -1263,7 +1459,7 @@ shift, vshift, xbox, ybox, zbox):
 
     nR,dum = xyzO_new.shape
 
-    if viscinaldir == 'y':  
+    if viscinaldir == 'yz':  
     
         phi = np.arctan(vshift/zbox); print "phi =", phi*180/np.pi
         zboxp = zbox/np.cos(phi)
@@ -1304,6 +1500,49 @@ shift, vshift, xbox, ybox, zbox):
 	       xyzO_step2[i,2] = xyzO_step2[i,2] - zboxp
 	       xyzH1_step2[i,2] = xyzH1_step2[i,2] - zboxp
 	       xyzH2_step2[i,2] = xyzH2_step2[i,2] - zboxp
+
+    elif viscinaldir == 'yx':  
+    
+        phi = np.arctan(vshift/xbox); print "phi =", phi*180/np.pi
+        xboxp = xbox/np.cos(phi)
+        yboxp = ybox*np.cos(phi)
+        zboxp = zbox
+        Rmat = np.array(\
+        [[np.cos(phi),np.sin(phi),0],[-np.sin(phi),np.cos(phi),0],[0,0,1]])
+        line1_m = -np.tan(phi)
+        line1_b = ybox
+        line2_m = line1_m
+        line2_b = 0.0
+        
+        for i in range(nR):
+   	   if (xyzO_step1[i,1] > line1_b + line1_m*xyzO_step1[i,2]):
+	       xyzO_step1[i,1] = xyzO_step1[i,1] - ybox
+	       xyzH1_step1[i,1] = xyzH1_step1[i,1] - ybox
+	       xyzH2_step1[i,1] = xyzH2_step1[i,1] - ybox
+	   if (xyzO_step1[i,1] < line2_b + line2_m*xyzO_step1[i,2]):
+	       xyzO_step1[i,1] = xyzO_step1[i,1] + ybox
+	       xyzH1_step1[i,1] = xyzH1_step1[i,1] + ybox
+	       xyzH2_step1[i,1] = xyzH2_step1[i,1] + ybox
+	   xyzO_step2[i,:] = np.dot(Rmat,xyzO_step1[i,:])
+	   xyzH1_step2[i,:] = np.dot(Rmat,xyzH1_step1[i,:])
+	   xyzH2_step2[i,:] = np.dot(Rmat,xyzH2_step1[i,:])
+	   if (xyzO_step2[i,0]<0):
+	       xyzO_step2[i,0] = xyzO_step2[i,0] + xboxp
+	       xyzH1_step2[i,0] = xyzH1_step2[i,0] + xboxp
+	       xyzH2_step2[i,0] = xyzH2_step2[i,0] + xboxp
+	   if (xyzO_step2[i,0]<0):
+	       xyzO_step2[i,0] = xyzO_step2[i,0] + xboxp
+	       xyzH1_step2[i,0] = xyzH1_step2[i,0] + xboxp
+	       xyzH2_step2[i,0] = xyzH2_step2[i,0] + xboxp
+	   if (xyzO_step2[i,0]>xboxp):
+	       xyzO_step2[i,0] = xyzO_step2[i,0] - xboxp
+	       xyzH1_step2[i,0] = xyzH1_step2[i,0] - xboxp
+	       xyzH2_step2[i,0] = xyzH2_step2[i,0] - xboxp
+	   if (xyzO_step2[i,0]>xboxp):
+	       xyzO_step2[i,0] = xyzO_step2[i,0] - xboxp
+	       xyzH1_step2[i,0] = xyzH1_step2[i,0] - xboxp
+	       xyzH2_step2[i,0] = xyzH2_step2[i,0] - xboxp
+	    
 	    
 
 
