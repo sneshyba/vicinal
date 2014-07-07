@@ -15,15 +15,17 @@ import copy
 #filename = 'spc_10_6_12_v06131.pdb'; xbox=44.90725; ybox=45.9565; zbox=44.6822104389
 
 # vmd: set cell [pbc set {45.5759439965 45.9843789846 43.9999992} -all]; pbc box ... tilt angle is 9.826 deg
-filename = 'spc_10_6_12_vx_orig.pdb'; xbox=45.57594; ybox=45.98438; zbox=43.99999
+#filename = 'spc_10_6_12_vx_orig.pdb'; xbox=45.57594; ybox=45.98438; zbox=43.99999
 
+# vmd: set cell [pbc set {45.5759439965 45.9843789846 43.9999992} -all]; pbc box ... tilt angle is 9.826 deg
+filename = 'spc_10_6_12_vx06271.pdb'; xbox=45.57594; ybox=45.98438; zbox=43.99999
 
 namestem = filename.find('.pdb')
 
 
 # Specify which is the exposed surface, and load the slab
-viscinaldir = 'y'; nycel=0
-xyzO, xyzH1, xyzH2, shift, structure = vs.loaditnew(filename, xbox, ybox, zbox, viscinaldir)
+vicinaldir = 'y'; nycel=0
+xyzO, xyzH1, xyzH2, shift, structure = vs.loaditnew(filename, xbox, ybox, zbox, vicinaldir)
 slab = vs.slab(filename, structure, xyzO, xyzH1, xyzH2, xbox, ybox, zbox)
 print slab.getdipole()
 

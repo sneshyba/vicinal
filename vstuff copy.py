@@ -403,26 +403,6 @@ def finddefects(nni,nnltoi,nnitol):
     Adefect_ret = Adefect[0:nAdefect]
     return Ddefect_ret, Adefect_ret
     
-def finddefecti(nni,nnltoi,nnitol,i):
-    nR, nk = nni.shape; #print nR, nk
-    Ddefect=np.zeros((nR*10,2)).astype(np.int32); nDdefect = 0
-    Adefect=np.zeros((nR*10,2)).astype(np.int32); nAdefect = 0
-    #for i in range(nR):
-    for k in range(4):
-            if (nni[i,k]>=0):
-                if (nnltoi[i,k]!=0) & (nnitol[i,k]!=0):
-                    Ddefect[nDdefect,0]=i
-                    Ddefect[nDdefect,1]=nni[i,k]
-                    nDdefect += 1
-                elif (nnltoi[i,k]==0) & (nnitol[i,k]==0):
-                    Adefect[nAdefect,0]=i
-                    Adefect[nAdefect,1]=nni[i,k]
-                    nAdefect += 1
-        #print i, nni[i], nnltoi[i], nnitol[i], Ddefect, Adefect
-    Ddefect_ret = Ddefect[0:nDdefect]
-    Adefect_ret = Adefect[0:nAdefect]
-    return Ddefect_ret, Adefect_ret
-    
 def findthreezeros(nni,nnitol):
     nR, nk = nni.shape
     problem = False
@@ -613,74 +593,6 @@ def fixsurface(nni,nnitol,nnltoi):
 
     return nnitol,nnltoi
     
-def fixsurfacei(nni,nnitol,nnltoi,ii):
-
-    # Check for defects
-    Ddefect, Adefect = finddefecti(nni,nnltoi,nnitol,ii)
-
-    #fix Ddefect with a "-1" nearest neighbor:
-    for m in range(len(Ddefect)):
-    
-        # Pull out the index to the next residue that has a donor defect
-        i = Ddefect[m,0]
-        l = Ddefect[m,1]
-
-        # See if this residue has any "-1" which means doesn't have a 
-        # nearest neighbor    
-        test = np.size(np.where(nni[i]<0))
-    
-        # If this defective residue is missing a nearest neighbor, 
-        # point its hydrogen toward the space
-        if (test>0):
-            
-            kzeroofi = np.squeeze(np.argwhere(nni[i]<0)[0])
-            test2 = nnitol[i,kzeroofi]
-            
-            if (test2==0):
-        
-            
-                kzeroofi = np.argwhere(nni[i]<0)[0]
-
-            
-                # Get the mutual pointer positions
-                klofi = np.squeeze(np.argwhere(nni[i]==l))
-                kiofl = np.squeeze(np.argwhere(nni[l]==i))
-
-                # Fix it by changing nnitol
-                temp = nnitol[i,klofi] # Which of i's Hydrogens is donor defect
-                nnitol[i,klofi] = 0 # Point i's lone pair to l
-                nnitol[i,kzeroofi] = temp # Point i's Hydrogen to what was -1 
-                nnltoi[l,kiofl] = 0 # Confirms i no longer points its H to l
-        
-    # Check for defects
-    Ddefect, Adefect = finddefecti(nni,nnltoi,nnitol,ii)
-                
-    # Fix Adefect with a "-1" as a nearest neighbor(as long as nnltoi[i] 
-    # does not have four 0's)
-    # Same logic as fixing Ddefect with "-1" as nearest neighbor
-
-    for n in range(len(Adefect)):
-        i = Adefect[n,0]
-        l = Adefect[n,1]
-        position = np.where(nni[i]<0)
-        test = np.size(position)
-        if test>0:
-            klofi = np.squeeze(np.argwhere(nni[i]==l))
-            kiofl = np.squeeze(np.argwhere(nni[l]==i))
-        
-            # Figure out which hydrogen is available (if any)
-            timesH1isused = np.size(np.argwhere(nnitol[i]==1))
-            timesH2isused = np.size(np.argwhere(nnitol[i]==2))
-            whichone = 0
-            if timesH1isused == 0:
-                whichone = 1
-            elif timesH2isused == 0:
-                whichone = 2
-            if whichone != 0:
-                nnitol[i,klofi] = whichone
-                nnltoi[l,kiofl] = whichone  
-
-    return nnitol,nnltoi
 
 def idsurfacedefects(nni,nnitol,nnltoi):
     nR, nk = nni.shape
@@ -1077,25 +989,8 @@ def fixit(slab, xyzO, xyzH1, xyzH2, xyzshift, nni, nnitol_in, nnltoi_in, nprop):
 def fixitfast(slab, xyzO, xyzH1, xyzH2, xyzshift, nni, nnitol_in, nnltoi_in, nprop):
     import random
 
-    def mixitup(size_0,size_1):
-        print "mixing it up ..."
-        temp = copy.copy(size_1)
-        size_1_out = copy.copy(size_0)
-        size_0_out = copy.copy(temp)
-        return size_0_out, size_1_out 
-        
-    def getdipole(xyzO,xyzH1,xyzH2):
-        NR,dum = np.shape(xyzO)
-        temp = np.zeros(np.shape(xyzO))
-        for i in range(NR):
-            temp[i] = xyzO[i]-(xyzH1[i]+xyzH2[i])/2
-        total = np.sum(temp,axis=0)
-        return total   
-
-
-
     # Threshold error
-    threshold = 3
+    threshold = 2.5
     
     # Fix any surface defects
     nnitol,nnltoi = fixsurface(nni,nnitol_in,nnltoi_in)
@@ -1103,11 +998,12 @@ def fixitfast(slab, xyzO, xyzH1, xyzH2, xyzshift, nni, nnitol_in, nnltoi_in, npr
     print "After initial surface fix:", len(Ddefect), len(Adefect)
 
     # Get the initial dipole
-    slabdipole = getdipole(xyzO,xyzH1,xyzH2)
+    slabdipole = slab.getdipole()
     
     #Propagate Adefects
     icount = 0
     for iprop in range(nprop):
+        dosomething = False
         if len(Ddefect) > 0:
             icount += 1
             m = random.randint(0,len(Ddefect)-1)
@@ -1135,14 +1031,7 @@ def fixitfast(slab, xyzO, xyzH1, xyzH2, xyzshift, nni, nnitol_in, nnltoi_in, npr
             vdipole_1 = xyzO_1-(xyzH1_1+xyzH2_1)/2
             slabdipole_1 = slabdipole -vdipole_icurrent +vdipole_1
             size_1 = np.sqrt(np.sum(slabdipole_1*slabdipole_1))
-            
-            # Mix it up sometimes
-            if np.mod(icount,10) == 0:
-                print "mixing it up ..."
-                size_0, size_1 = mixitup(size_0,size_1) 
-                slabdipole = getdipole(xyzO,xyzH1,xyzH2)
-      
-            print 'D ', icount, len(Ddefect), len(Adefect), slabdipole, size_0, size_1 
+            print 'D ', icount, size_0, size_1, len(Ddefect), len(Adefect)
             
             if (size_0 < size_1) and size_0 < threshold:
                 nnitol = copy.deepcopy(nnitol_0)
@@ -1151,8 +1040,10 @@ def fixitfast(slab, xyzO, xyzH1, xyzH2, xyzshift, nni, nnitol_in, nnltoi_in, npr
                 xyzH1[i] = copy.deepcopy(xyzH1_0)
                 xyzH2[i] = copy.deepcopy(xyzH2_0)
                 slabdipole = copy.deepcopy(slabdipole_0)
-                nnitol,nnltoi = fixsurfacei(nni,nnitol,nnltoi,i)
+                if len(Ddefect > 0):
+                    nnitol,nnltoi = fixsurface(nni,nnitol,nnltoi)
                 Ddefect, Adefect = finddefects(nni,nnltoi,nnitol)
+                dosomething = True
             elif (size_1 < size_0) and size_1 < threshold:
                 nnitol = copy.deepcopy(nnitol_1)
                 nnltoi = copy.deepcopy(nnltoi_1)
@@ -1160,8 +1051,10 @@ def fixitfast(slab, xyzO, xyzH1, xyzH2, xyzshift, nni, nnitol_in, nnltoi_in, npr
                 xyzH1[i] = copy.deepcopy(xyzH1_1)
                 xyzH2[i] = copy.deepcopy(xyzH2_1)
                 slabdipole = copy.deepcopy(slabdipole_1)
-                nnitol,nnltoi = fixsurfacei(nni,nnitol,nnltoi,i)
+                if len(Ddefect > 0):
+                    nnitol,nnltoi = fixsurface(nni,nnitol,nnltoi)
                 Ddefect, Adefect = finddefects(nni,nnltoi,nnitol)
+                dosomething = True
 
         if len(Adefect) > 0:
             icount += 1
@@ -1192,13 +1085,8 @@ def fixitfast(slab, xyzO, xyzH1, xyzH2, xyzshift, nni, nnitol_in, nnltoi_in, npr
             vdipole_1 = xyzO_1-(xyzH1_1+xyzH2_1)/2
             slabdipole_1 = slabdipole -vdipole_icurrent +vdipole_1
             size_1 = np.sqrt(np.sum(slabdipole_1*slabdipole_1))
-            
-            if np.mod(icount,10) == 0:
-                print "mixing it up ..."
-                size_0, size_1 = mixitup(size_0,size_1) 
-                slabdipole = getdipole(xyzO,xyzH1,xyzH2)            
-                
-            print 'A ', icount, len(Ddefect), len(Adefect), slabdipole, size_0, size_1 
+            print 'A ', icount, size_0, size_1, len(Ddefect), len(Adefect)
+
             if (size_0 < size_1) and size_0 < threshold:
                 nnitol = copy.deepcopy(nnitol_0)
                 nnltoi = copy.deepcopy(nnltoi_0)
@@ -1206,8 +1094,10 @@ def fixitfast(slab, xyzO, xyzH1, xyzH2, xyzshift, nni, nnitol_in, nnltoi_in, npr
                 xyzH1[i] = copy.deepcopy(xyzH1_0)
                 xyzH2[i] = copy.deepcopy(xyzH2_0)
                 slabdipole = copy.deepcopy(slabdipole_0)
-                nnitol,nnltoi = fixsurfacei(nni,nnitol,nnltoi,i)
+                if len(Adefect) > 0:
+                    nnitol,nnltoi = fixsurface(nni,nnitol,nnltoi)
                 Ddefect, Adefect = finddefects(nni,nnltoi,nnitol)
+                dosomething = True
             elif (size_1 < size_0) and size_1 < threshold:
                 nnitol = copy.deepcopy(nnitol_1)
                 nnltoi = copy.deepcopy(nnltoi_1)
@@ -1215,12 +1105,20 @@ def fixitfast(slab, xyzO, xyzH1, xyzH2, xyzshift, nni, nnitol_in, nnltoi_in, npr
                 xyzH1[i] = copy.deepcopy(xyzH1_1)
                 xyzH2[i] = copy.deepcopy(xyzH2_1)
                 slabdipole = copy.deepcopy(slabdipole_1)
-                nnitol,nnltoi = fixsurfacei(nni,nnitol,nnltoi,i)
+                if len(Adefect) > 0:
+                    nnitol,nnltoi = fixsurface(nni,nnitol,nnltoi)
                 Ddefect, Adefect = finddefects(nni,nnltoi,nnitol)
+                dosomething = True
                         
+
+            #Look over the entire slab for remaining defects
+            #if dosomething:            
+    
     print "After fixing defects:", len(Ddefect), len(Adefect), \
     "which took", icount, "iterations"
+
     return nnitol, nnltoi
+
 
 def reconstructall(xyzO, xyzH1, xyzH2, nni, nnitol, xyzshift):
     # Orient residues in a desired config

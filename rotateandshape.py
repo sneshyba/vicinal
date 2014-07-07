@@ -10,13 +10,13 @@ filename = 'spc_10_6_12.pdb'; nx = 10; ny = 6; nz = 12
 dum = filename.find('.pdb')
 outfilename = filename[0:dum]+'_vx_orig.pdb'
 
-# Specify which viscinal surface to generate, and load the slab
-viscinaldir = 'yx'; nycel=1
-xyzO, xyzH1, xyzH2, viscinaldir, shift, vshift, xbox, ybox, zbox, structure = vs.loadit(filename, nx, ny, nz, viscinaldir, nycel)
+# Specify which vicinal surface to generate, and load the slab
+vicinaldir = 'yx'; nycel=1
+xyzO, xyzH1, xyzH2, vicinaldir, shift, vshift, xbox, ybox, zbox, structure = vs.loadit(filename, nx, ny, nz, vicinaldir, nycel)
 slab = vs.slab(filename,structure,xyzO, xyzH1, xyzH2, xbox, ybox, zbox)
 
 # Reconstruct & rotate it, then save it
-slab.rotateit(viscinaldir,vshift)
+slab.rotateit(vicinaldir,vshift)
 slab.saveit(outfilename)
 print slab.xbox, slab.ybox, slab.zbox
 
