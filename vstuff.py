@@ -112,7 +112,6 @@ class slab:
             line2_b = 0.0
         
             #print Rmat
-
             for i in range(nR):
    	        if (xyzO_step1[i,1] > line1_b + line1_m*xyzO_step1[i,2]):
 	           xyzO_step1[i,1] = xyzO_step1[i,1] - ybox
@@ -194,6 +193,118 @@ class slab:
         self.xbox = xboxp
         self.ybox = yboxp
         self.zbox = zboxp
+        return
+        
+    def shiftit(self,shiftdir,vshift):
+        xyzO_step1 = copy.deepcopy(self.xyzO)
+        xyzH1_step1 = copy.deepcopy(self.xyzH1)
+        xyzH2_step1 = copy.deepcopy(self.xyzH2)
+        xyzO_step2 = np.zeros(np.shape(self.xyzO))
+        xyzH1_step2 = np.zeros(np.shape(self.xyzH1))
+        xyzH2_step2 = np.zeros(np.shape(self.xyzH2))
+        xbox = self.xbox
+        ybox = self.ybox
+        zbox = self.zbox
+        nR,dum = xyzO_step1.shape
+
+        '''
+        if vicinaldir == 'yz':  
+    
+            phi = np.arctan(vshift/zbox); print "phi =", phi*180/np.pi
+            zboxp = zbox/np.cos(phi)
+            yboxp = ybox*np.cos(phi)
+            xboxp = xbox
+            Rmat = \
+            np.array([[1,0,0],[0,np.cos(phi),np.sin(phi)],\
+            [0,-np.sin(phi),np.cos(phi)]])
+            line1_m = -np.tan(phi)
+            line1_b = ybox
+            line2_m = line1_m
+            line2_b = 0.0
+        
+            #print Rmat
+            for i in range(nR):
+   	        if (xyzO_step1[i,1] > line1_b + line1_m*xyzO_step1[i,2]):
+	           xyzO_step1[i,1] = xyzO_step1[i,1] - ybox
+	           xyzH1_step1[i,1] = xyzH1_step1[i,1] - ybox
+	           xyzH2_step1[i,1] = xyzH2_step1[i,1] - ybox
+	        if (xyzO_step1[i,1] < line2_b + line2_m*xyzO_step1[i,2]):
+	           xyzO_step1[i,1] = xyzO_step1[i,1] + ybox
+	           xyzH1_step1[i,1] = xyzH1_step1[i,1] + ybox
+	           xyzH2_step1[i,1] = xyzH2_step1[i,1] + ybox
+	        xyzO_step2[i,:] = np.dot(Rmat,xyzO_step1[i,:])
+	        xyzH1_step2[i,:] = np.dot(Rmat,xyzH1_step1[i,:])
+	        xyzH2_step2[i,:] = np.dot(Rmat,xyzH2_step1[i,:])
+	        if (xyzO_step2[i,2]<0):
+	           xyzO_step2[i,2] = xyzO_step2[i,2] + zboxp
+	           xyzH1_step2[i,2] = xyzH1_step2[i,2] + zboxp
+	           xyzH2_step2[i,2] = xyzH2_step2[i,2] + zboxp
+	        if (xyzO_step2[i,2]<0):
+	           xyzO_step2[i,2] = xyzO_step2[i,2] + zboxp
+	           xyzH1_step2[i,2] = xyzH1_step2[i,2] + zboxp
+	           xyzH2_step2[i,2] = xyzH2_step2[i,2] + zboxp
+	        if (xyzO_step2[i,2]>zboxp):
+	           xyzO_step2[i,2] = xyzO_step2[i,2] - zboxp
+	           xyzH1_step2[i,2] = xyzH1_step2[i,2] - zboxp
+	           xyzH2_step2[i,2] = xyzH2_step2[i,2] - zboxp
+	        if (xyzO_step2[i,2]>zboxp):
+	           xyzO_step2[i,2] = xyzO_step2[i,2] - zboxp
+	           xyzH1_step2[i,2] = xyzH1_step2[i,2] - zboxp
+	           xyzH2_step2[i,2] = xyzH2_step2[i,2] - zboxp
+
+        elif vicinaldir == 'yx':  
+    
+            phi = np.arctan(vshift/xbox); print "phi =", phi*180/np.pi
+            xboxp = xbox/np.cos(phi)
+            yboxp = ybox*np.cos(phi)
+            zboxp = zbox
+            Rmat = np.array(\
+            [[np.cos(phi),np.sin(phi),0],[-np.sin(phi),np.cos(phi),0],[0,0,1]])
+            line1_m = np.tan(phi)
+            line1_b = ybox
+            line2_m = line1_m
+            line2_b = 0.0
+        
+            for i in range(nR):
+   	        if (xyzO_step1[i,1] > line1_b + line1_m*xyzO_step1[i,0]):
+	           xyzO_step1[i,1] = xyzO_step1[i,1] - ybox
+	           xyzH1_step1[i,1] = xyzH1_step1[i,1] - ybox
+	           xyzH2_step1[i,1] = xyzH2_step1[i,1] - ybox
+	        if (xyzO_step1[i,1] < line2_b + line2_m*xyzO_step1[i,0]):
+	           xyzO_step1[i,1] = xyzO_step1[i,1] + ybox
+	           xyzH1_step1[i,1] = xyzH1_step1[i,1] + ybox
+	           xyzH2_step1[i,1] = xyzH2_step1[i,1] + ybox
+	        xyzO_step2[i,:] = np.dot(Rmat,xyzO_step1[i,:])
+	        xyzH1_step2[i,:] = np.dot(Rmat,xyzH1_step1[i,:])
+	        xyzH2_step2[i,:] = np.dot(Rmat,xyzH2_step1[i,:])
+	        if (xyzO_step2[i,0]<0):
+	           xyzO_step2[i,0] = xyzO_step2[i,0] + xboxp
+	           xyzH1_step2[i,0] = xyzH1_step2[i,0] + xboxp
+	           xyzH2_step2[i,0] = xyzH2_step2[i,0] + xboxp
+	        if (xyzO_step2[i,0]<0):
+	           xyzO_step2[i,0] = xyzO_step2[i,0] + xboxp
+	           xyzH1_step2[i,0] = xyzH1_step2[i,0] + xboxp
+	           xyzH2_step2[i,0] = xyzH2_step2[i,0] + xboxp
+	        if (xyzO_step2[i,0]>xboxp):
+	           xyzO_step2[i,0] = xyzO_step2[i,0] - xboxp
+	           xyzH1_step2[i,0] = xyzH1_step2[i,0] - xboxp
+	           xyzH2_step2[i,0] = xyzH2_step2[i,0] - xboxp
+	        if (xyzO_step2[i,0]>xboxp):
+	           xyzO_step2[i,0] = xyzO_step2[i,0] - xboxp
+	           xyzH1_step2[i,0] = xyzH1_step2[i,0] - xboxp
+	           xyzH2_step2[i,0] = xyzH2_step2[i,0] - xboxp
+
+        else:
+            print "Not implemented yet"
+ 
+        #return xyzO_step2, xyzH1_step2, xyzH2_step2, xboxp, yboxp, zboxp
+        self.xyzO = xyzO_step2
+        self.xyzH1 = xyzH1_step2
+        self.xyzH2 = xyzH2_step2
+        self.xbox = xboxp
+        self.ybox = yboxp
+        self.zbox = zboxp
+        '''   
         return
 
     def getdipole(self,*i):
