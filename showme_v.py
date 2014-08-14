@@ -18,7 +18,10 @@ import copy
 #filename = 'spc_10_6_12_vx_orig.pdb'; xbox=45.57594; ybox=45.98438; zbox=43.99999
 
 # vmd: set cell [pbc set {45.5759439965 45.9843789846 43.9999992} -all]; pbc box ... tilt angle is 9.826 deg
-filename = 'spc_10_6_12_vx06271.pdb'; xbox=45.57594; ybox=45.98438; zbox=43.99999
+#filename = 'spc_10_6_12_vx06271.pdb'; xbox=45.57594; ybox=45.98438; zbox=43.99999
+
+# vmd: set cell [pbc set {90.1507996879 46.4950169842 43.99999} -all]; pbc box ... tilt angle is 4.94961 deg
+filename = 'spc_20_6_12_vx07081.pdb'; xbox=90.15079968; ybox=46.4950169842; zbox=43.99999
 
 namestem = filename.find('.pdb')
 

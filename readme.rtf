@@ -1,0 +1,149 @@
+{\rtf1\mac\ansicpg10000\cocoartf824\cocoasubrtf480
+{\fonttbl\f0\fswiss\fcharset77 Helvetica-Bold;\f1\fswiss\fcharset77 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+\margl1440\margr1440\vieww12680\viewh13660\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\ql\qnatural\pardirnatural
+
+\f0\b\fs24 \cf0 This is a copy of the ice-Ih-gen run:\
+
+\f1\b0 \
+th420-06:/Volumes/Neshyba's 500 Gig/Ice_from_erin nesh$ ice-Ih-gen\
+ roo?\
+2.75\
+ rhh=  1.63298087\
+ cutoff for potential [A]?\
+10\
+ 8 atoms in a cell\
+ unit vectors in ams:\
+  4.4907312  7.77817459  3.66666667\
+ nx,ny,nz?\
+ nz=#hex layers must be multiple of 2\
+8 4 10\
+ sides of box A  35.9258496  31.1126984  36.6666667\
+ satisfied? enter 0\
+0\
+ nmol= 1280\
+ coor: 0  0.\
+ coor: 1  0.\
+ coor: 2  0.\
+ coor: 3  0.\
+ coor: 4  1280.\
+ dseed?\
+1d10\
+ # improvement rounds, #steps in round? (eg~1000,10000)\
+1000 10000\
+ # max tries?\
+400\
+ after how many futile attempts to stop?\
+400\
+ e-,dip. identity criterions?\
+1d-4 1d-4\
+ found zero dipole struct\
+ finished,# structs found,requested 92 10000\
+ tries made, max: 92 400\
+ 2 kinds of failures: 0 0\
+ lowest energy tot/ehh/edip/dipole -13.3341316  6.3870152 -6.52312452\
+  0.0662421379\
+ total bonds 2560\
+\
+
+\f0\b Next, conversions to spc and ne6 using perl\
+
+\f1\b0 \
+th420-06:/Volumes/Neshyba's 500 Gig/Ice_from_erin nesh$ perl ice_mkpdb.pl > spc_8_4_10.pdb\
+th420-06:/Volumes/Neshyba's 500 Gig/Ice_from_erin nesh$ perl spc2ne6.pl spc_8_4_10.pdb > ne6_8_4_10.pdb \
+\
+
+\f0\b Then, conversion of the .pdb to .gro format using gromacs. You\
+can add 
+\f1\b0 -box 7 7 3.6666667 
+\f0\b (or whatever) in this same command to extend the box size:\
+
+\f1\b0 \
+th420-06:/Volumes/Neshyba's 500 Gig/Ice_from_erin nesh$ editconf -f ne6_8_4_10.pdb -o ne6_8_4_10.gro\
+                         :-)  G  R  O  M  A  C  S  (-:\
+\
+               Go Rough, Oppose Many Angry Chinese Serial killers\
+\
+                            :-)  VERSION 3.3.2  (-:\
+\
+\
+      Written by David van der Spoel, Erik Lindahl, Berk Hess, and others.\
+       Copyright (c) 1991-2000, University of Groningen, The Netherlands.\
+             Copyright (c) 2001-2007, The GROMACS development team,\
+            check out http://www.gromacs.org for more information.\
+\
+         This program is free software; you can redistribute it and/or\
+          modify it under the terms of the GNU General Public License\
+         as published by the Free Software Foundation; either version 2\
+             of the License, or (at your option) any later version.\
+\
+                               :-)  editconf  (-:\
+\
+Option     Filename  Type         Description\
+------------------------------------------------------------\
+  -f ne6_8_4_10.pdb  Input        Generic structure: gro g96 pdb tpr tpb tpa\
+                                   xml\
+  -n      index.ndx  Input, Opt.  Index file\
+  -o ne6_8_4_10.gro  Output, Opt! Generic structure: gro g96 pdb xml\
+-mead      mead.pqr  Output, Opt. Coordinate file for MEAD\
+ -bf      bfact.dat  Input, Opt.  Generic data file\
+\
+Option       Type   Value   Description\
+------------------------------------------------------\
+-[no]h       bool   no      Print help info and quit\
+-nice        int    0       Set the nicelevel\
+-[no]w       bool   no      View output xvg, xpm, eps and pdb files\
+-[no]ndef    bool   no      Choose output from default index groups\
+-bt          enum   triclinic  Box type for -box and -d: triclinic, cubic,\
+                            dodecahedron or octahedron\
+-box         vector 0 0 0   Box vector lengths (a,b,c)\
+-angles      vector 90 90 90  Angles between the box vectors (bc,ac,ab)\
+-d           real   0       Distance between the solute and the box\
+-[no]c       bool   no      Center molecule in box (implied by -box and -d)\
+-center      vector 0 0 0   Coordinates of geometrical center\
+-translate   vector 0 0 0   Translation\
+-rotate      vector 0 0 0   Rotation around the X, Y and Z axes in degrees\
+-[no]princ   bool   no      Orient molecule(s) along their principal axes\
+-scale       vector 1 1 1   Scaling factor\
+-density     real   1000    Density (g/l) of the output box achieved by\
+                            scaling\
+-[no]vol     bool   yes     Compute and print volume of the box\
+-[no]pbc     bool   no      Remove the periodicity (make molecule whole again)\
+-[no]grasp   bool   no      Store the charge of the atom in the B-factor\
+                            field and the radius of the atom in the occupancy\
+                            field\
+-rvdw        real   0.12    Default Van der Waals radius (in nm) if one can\
+                            not be found in the database or if no parameters\
+                            are present in the topology file\
+-sig56       real   0       Use rmin/2 (minimum in the Van der Waals\
+                            potential) rather than sigma/2 \
+-[no]vdwread bool   no      Read the Van der Waals radii from the file\
+                            vdwradii.dat rather than computing the radii\
+                            based on the force field\
+-[no]atom    bool   no      Force B-factor attachment per atom\
+-[no]legend  bool   no      Make B-factor legend\
+-label       string A       Add chain label for all residues\
+\
+WARNING: masses will be determined based on residue and atom names,\
+         this can deviate from the real mass of the atom type\
+Opening library file /usr/local/gromacs/share/gromacs/top/aminoacids.dat\
+Opening library file /usr/local/gromacs/share/gromacs/top/atommass.dat\
+Opening library file /usr/local/gromacs/share/gromacs/top/vdwradii.dat\
+Opening library file /usr/local/gromacs/share/gromacs/top/dgsolv.dat\
+#Entries in atommass.dat: 83 vdwradii.dat: 27 dgsolv.dat: 7\
+Read 7680 atoms\
+Volume: 0 nm^3, corresponds to roughly 0 electrons\
+No velocities found\
+\
+
+\f0\b In the mdp file, you'll need to ask gromacs to generate initial velocities, and restrict the angular motion of the slab, e.g.\
+
+\f1\b0 \
+gen_vel                  = yes\
+gen-temp                 = 250\
+gen-seed                 = 173529\
+\
+comm-mode                = Linear\
+\
+}

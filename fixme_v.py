@@ -14,11 +14,13 @@ import copy
 #outfilename = 'spc_10_6_12_v_06131.pdb'
 #xbox=44.90725; ybox=45.9565; zbox=44.6822104389
 
-filename = 'spc_10_6_12_vx_orig.pdb'
-outfilename = 'spc_10_6_12_vx06271.pdb'
-xbox=45.57594; ybox=45.98438; zbox=43.99999
+#filename = 'spc_10_6_12_vx_orig.pdb'
+#outfilename = 'spc_10_6_12_vx06271.pdb'
+#xbox=45.57594; ybox=45.98438; zbox=43.99999
 
-
+filename = 'spc_20_6_12_vx_orig.pdb'
+outfilename = 'spc_20_6_12_vx07081.pdb'
+xbox=90.1507996879; ybox=46.4950169842; zbox=43.99999
 
 # Specify which is the exposed surface, and load the slab
 vicinaldir = 'y'; nycel=0

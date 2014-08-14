@@ -5,15 +5,45 @@ import Bio.PDB
 import pdb
 
 class slab:
-    def __init__(self,filename,structure,xyzO,xyzH1,xyzH2,xbox=0,ybox=0,zbox=0):
+    def __init__(self,filename,structure,xyzO,xyzH1,xyzH2,nx=0,ny=0,nz=0,nycel=1,vicinaldir='none'):
         self.xyzO = copy.deepcopy(xyzO)
         self.xyzH1 = copy.deepcopy(xyzH1)
         self.xyzH2 = copy.deepcopy(xyzH2)
         self.filename = copy.deepcopy(filename)
         self.structure = copy.deepcopy(structure)
+        
+        # These are cell dimensions
+        xcel = 4.4907312
+        ycel = 7.7781746
+        zcel = 3.6666666
+        xbox = xcel*nx; ybox = ycel*ny; zbox = zcel*nz
+
+        # Set the shift information according to the vicinal surface we want
+        if vicinaldir == 'yz':
+            vshift = ycel*nycel # This is the vicinal shift
+            shift = np.array([\
+                [ xbox,       0,          0      ], \
+                [ 0,          ybox+10,    0,     ], \
+                [ 0,          vshift,     zbox   ]])
+        elif vicinaldir == 'yx':
+            vshift = ycel*nycel # This is the vicinal shift
+            shift = np.array([\
+                [ xbox,       0,         0       ], \
+                [ 0,          ybox+10,   0,      ], \
+                [ vshift,     0,         zbox    ]])
+        elif vicinaldir == 'none':
+            shift = np.array([\
+                [ xbox,       0,         0       ], \
+                [ 0,          ybox,      0,      ], \
+                [ 0,          0,         zbox    ]])
+        else:
+            print "Not implemented yet"
+            #break
+                
         self.xbox = xbox
         self.ybox = ybox
         self.zbox = zbox
+        self.shift = shift
         self.NR = len(xyzO)
 
 
@@ -195,6 +225,118 @@ class slab:
         self.zbox = zboxp
         return
         
+    def shiftit(self,shiftdir,vshift):
+        xyzO_step1 = copy.deepcopy(self.xyzO)
+        xyzH1_step1 = copy.deepcopy(self.xyzH1)
+        xyzH2_step1 = copy.deepcopy(self.xyzH2)
+        xyzO_step2 = np.zeros(np.shape(self.xyzO))
+        xyzH1_step2 = np.zeros(np.shape(self.xyzH1))
+        xyzH2_step2 = np.zeros(np.shape(self.xyzH2))
+        xbox = self.xbox
+        ybox = self.ybox
+        zbox = self.zbox
+        nR,dum = xyzO_step1.shape
+
+        '''
+        if vicinaldir == 'yz':  
+    
+            phi = np.arctan(vshift/zbox); print "phi =", phi*180/np.pi
+            zboxp = zbox/np.cos(phi)
+            yboxp = ybox*np.cos(phi)
+            xboxp = xbox
+            Rmat = \
+            np.array([[1,0,0],[0,np.cos(phi),np.sin(phi)],\
+            [0,-np.sin(phi),np.cos(phi)]])
+            line1_m = -np.tan(phi)
+            line1_b = ybox
+            line2_m = line1_m
+            line2_b = 0.0
+        
+            #print Rmat
+            for i in range(nR):
+   	        if (xyzO_step1[i,1] > line1_b + line1_m*xyzO_step1[i,2]):
+	           xyzO_step1[i,1] = xyzO_step1[i,1] - ybox
+	           xyzH1_step1[i,1] = xyzH1_step1[i,1] - ybox
+	           xyzH2_step1[i,1] = xyzH2_step1[i,1] - ybox
+	        if (xyzO_step1[i,1] < line2_b + line2_m*xyzO_step1[i,2]):
+	           xyzO_step1[i,1] = xyzO_step1[i,1] + ybox
+	           xyzH1_step1[i,1] = xyzH1_step1[i,1] + ybox
+	           xyzH2_step1[i,1] = xyzH2_step1[i,1] + ybox
+	        xyzO_step2[i,:] = np.dot(Rmat,xyzO_step1[i,:])
+	        xyzH1_step2[i,:] = np.dot(Rmat,xyzH1_step1[i,:])
+	        xyzH2_step2[i,:] = np.dot(Rmat,xyzH2_step1[i,:])
+	        if (xyzO_step2[i,2]<0):
+	           xyzO_step2[i,2] = xyzO_step2[i,2] + zboxp
+	           xyzH1_step2[i,2] = xyzH1_step2[i,2] + zboxp
+	           xyzH2_step2[i,2] = xyzH2_step2[i,2] + zboxp
+	        if (xyzO_step2[i,2]<0):
+	           xyzO_step2[i,2] = xyzO_step2[i,2] + zboxp
+	           xyzH1_step2[i,2] = xyzH1_step2[i,2] + zboxp
+	           xyzH2_step2[i,2] = xyzH2_step2[i,2] + zboxp
+	        if (xyzO_step2[i,2]>zboxp):
+	           xyzO_step2[i,2] = xyzO_step2[i,2] - zboxp
+	           xyzH1_step2[i,2] = xyzH1_step2[i,2] - zboxp
+	           xyzH2_step2[i,2] = xyzH2_step2[i,2] - zboxp
+	        if (xyzO_step2[i,2]>zboxp):
+	           xyzO_step2[i,2] = xyzO_step2[i,2] - zboxp
+	           xyzH1_step2[i,2] = xyzH1_step2[i,2] - zboxp
+	           xyzH2_step2[i,2] = xyzH2_step2[i,2] - zboxp
+
+        elif vicinaldir == 'yx':  
+    
+            phi = np.arctan(vshift/xbox); print "phi =", phi*180/np.pi
+            xboxp = xbox/np.cos(phi)
+            yboxp = ybox*np.cos(phi)
+            zboxp = zbox
+            Rmat = np.array(\
+            [[np.cos(phi),np.sin(phi),0],[-np.sin(phi),np.cos(phi),0],[0,0,1]])
+            line1_m = np.tan(phi)
+            line1_b = ybox
+            line2_m = line1_m
+            line2_b = 0.0
+        
+            for i in range(nR):
+   	        if (xyzO_step1[i,1] > line1_b + line1_m*xyzO_step1[i,0]):
+	           xyzO_step1[i,1] = xyzO_step1[i,1] - ybox
+	           xyzH1_step1[i,1] = xyzH1_step1[i,1] - ybox
+	           xyzH2_step1[i,1] = xyzH2_step1[i,1] - ybox
+	        if (xyzO_step1[i,1] < line2_b + line2_m*xyzO_step1[i,0]):
+	           xyzO_step1[i,1] = xyzO_step1[i,1] + ybox
+	           xyzH1_step1[i,1] = xyzH1_step1[i,1] + ybox
+	           xyzH2_step1[i,1] = xyzH2_step1[i,1] + ybox
+	        xyzO_step2[i,:] = np.dot(Rmat,xyzO_step1[i,:])
+	        xyzH1_step2[i,:] = np.dot(Rmat,xyzH1_step1[i,:])
+	        xyzH2_step2[i,:] = np.dot(Rmat,xyzH2_step1[i,:])
+	        if (xyzO_step2[i,0]<0):
+	           xyzO_step2[i,0] = xyzO_step2[i,0] + xboxp
+	           xyzH1_step2[i,0] = xyzH1_step2[i,0] + xboxp
+	           xyzH2_step2[i,0] = xyzH2_step2[i,0] + xboxp
+	        if (xyzO_step2[i,0]<0):
+	           xyzO_step2[i,0] = xyzO_step2[i,0] + xboxp
+	           xyzH1_step2[i,0] = xyzH1_step2[i,0] + xboxp
+	           xyzH2_step2[i,0] = xyzH2_step2[i,0] + xboxp
+	        if (xyzO_step2[i,0]>xboxp):
+	           xyzO_step2[i,0] = xyzO_step2[i,0] - xboxp
+	           xyzH1_step2[i,0] = xyzH1_step2[i,0] - xboxp
+	           xyzH2_step2[i,0] = xyzH2_step2[i,0] - xboxp
+	        if (xyzO_step2[i,0]>xboxp):
+	           xyzO_step2[i,0] = xyzO_step2[i,0] - xboxp
+	           xyzH1_step2[i,0] = xyzH1_step2[i,0] - xboxp
+	           xyzH2_step2[i,0] = xyzH2_step2[i,0] - xboxp
+
+        else:
+            print "Not implemented yet"
+ 
+        #return xyzO_step2, xyzH1_step2, xyzH2_step2, xboxp, yboxp, zboxp
+        self.xyzO = xyzO_step2
+        self.xyzH1 = xyzH1_step2
+        self.xyzH2 = xyzH2_step2
+        self.xbox = xboxp
+        self.ybox = yboxp
+        self.zbox = zboxp
+        '''   
+        return
+
     def getdipole(self,*i):
         if (len(i) == 0):
             vdipole = np.zeros(np.shape(self.xyzO))
@@ -209,37 +351,14 @@ class slab:
 
 
 
-def loadit(filename, nx, ny, nz, vicinaldir='yz', nycel=1):
+def loadit(filename):
 
-    # These are cell dimensions
-    xcel = 4.4907312
-    ycel = 7.7781746
-    zcel = 3.6666666
 
     # Read in the pdb structure & specify the box size
     parser = Bio.PDB.PDBParser()
     #pdb.set_trace()
-    #nx = 4; ny = 4, nz = 2
-    structure = parser.get_structure(\
-    'pdb', filename); xbox = xcel*nx; ybox = ycel*ny; zbox = zcel*nz
-
-    # Set the shift information according to the vicinal surface we want
-    if vicinaldir == 'yz':
-        vshift = ycel*nycel # This is the vicinal shift
-        shift = np.array([\
-            [ xbox,       0,          0      ], \
-            [ 0,          ybox+10,    0,     ], \
-            [ 0,          vshift,     zbox   ]])
-    elif vicinaldir == 'yx':
-        vshift = ycel*nycel # This is the vicinal shift
-        shift = np.array([\
-            [ xbox,       0,         0       ], \
-            [ 0,          ybox+10,   0,      ], \
-            [ vshift,     0,         zbox    ]])
-    else:
-        print "Not implemented yet"
-        #break
-                
+    structure = parser.get_structure('pdb', filename)
+    
     # A clumsy way to count the number of residues
     nR = 0
     for model in structure:
@@ -368,54 +487,6 @@ def saveit(filename,structure,xyzO,xyzH1,xyzH2):
                         temp = xyzH1[i]
                     elif (test == 2):
                 	temp = xyzH2[i]
-                    atom.set_coord(temp)
-                    #print i,np.mod(j,3), temp
-                    j = j+1
-    IO.save(filename)
-
-def save2(filename,structure,xyzO,xyzH1,xyzH2,xyzO_2,xyzH1_2,xyzH2_2):
-
-
-    # Read in the pdb structure & specify the box size
-    #parser = Bio.PDB.PDBParser()
-    IO = Bio.PDB.PDBIO()
-    IO.set_structure(structure)
-
-    # Get all the coordinates
-    i = -1 # residue counter
-    for model in structure:
-        for chain in model:
-            j=0 # atom counter
-            for residue in chain:
-                for atom in residue:
-                    test=np.mod(j,3)
-                    if (test == 0):
-                        i = i+1
-                        temp = xyzO[i]
-                    elif (test ==1):
-                        temp = xyzH1[i]
-                    elif (test == 2):
-                	temp = xyzH2[i]
-                    atom.set_coord(temp)
-                    #print i,np.mod(j,3), temp
-                    j = j+1
-
-    
-    # Get all the coordinates
-    i = -1 # residue counter
-    for model in structure:
-        for chain in model:
-            j=0 # atom counter
-            for residue in chain:
-                for atom in residue:
-                    test=np.mod(j,3)
-                    if (test == 0):
-                        i = i+1
-                        temp = xyzO_2[i]
-                    elif (test ==1):
-                        temp = xyzH1_2[i]
-                    elif (test == 2):
-                	temp = xyzH2_2[i]
                     atom.set_coord(temp)
                     #print i,np.mod(j,3), temp
                     j = j+1
