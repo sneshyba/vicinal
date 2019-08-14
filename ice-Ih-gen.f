@@ -50,7 +50,8 @@ c	call writ
 c building a piece bound by hexagonal surfaces
 	implicit real*8(a-h,o-z)
 c nmoll max num of water molecules SPN: orig was nmoll=4000,natmm=6000,ndimm=18000
-	parameter (nmoll=6000,natmm=18000,ndimm=18000)
+c	parameter (nmoll=6000,natmm=18000,ndimm=18000)
+	parameter (nmoll=4000,natmm=6000,ndimm=18000)
 	common /unitc/ aerg,aev,acm1,atem,akm,amev,amu,ams,atim,aps
 	common/xmmmmm/ xmas(3),xmass(9),xiner(3),xmol
 	common/param1/roh,ang,qh,ao2,co2,rom,qmm,qmh,qhh,ff,ff12,ddpl
