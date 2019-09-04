@@ -49,8 +49,9 @@ c	call writ
 	subroutine build
 c building a piece bound by hexagonal surfaces
 	implicit real*8(a-h,o-z)
-c nmoll max num of water molecules SPN: orig was nmoll=8000,natmm=10000,ndimm=18000
-	parameter (nmoll=8000,natmm=10000,ndimm=18000)
+c nmoll max num of water molecules SPN: orig was nmoll=4000,natmm=6000,ndimm=18000
+c	parameter (nmoll=6000,natmm=18000,ndimm=18000)
+	parameter (nmoll=4000,natmm=6000,ndimm=18000)
 	common /unitc/ aerg,aev,acm1,atem,akm,amev,amu,ams,atim,aps
 	common/xmmmmm/ xmas(3),xmass(9),xiner(3),xmol
 	common/param1/roh,ang,qh,ao2,co2,rom,qmm,qmh,qhh,ff,ff12,ddpl
@@ -307,7 +308,7 @@ c cutne is cutoff for nearest neighbor distance, ctn2 - squared
 c write graphic file for oxygen lattice
 c if iho=1 oxygens only
 c =2 include hydrogens
-	parameter (nmoll=8000,natmm=10000,ndimm=18000)
+	parameter (nmoll=4000,natmm=6000,ndimm=18000)
 	common /unitc/ aerg,aev,acm1,atem,akm,amev,amu,ams,atim,aps
 	common/numbs/nmol,natm,ndim
 	common /xlattt/xlat(nmoll,9,2)
@@ -348,7 +349,7 @@ c CHARMM COORDINATES
 	subroutine anal
 c analysis of O-structure
 	implicit real*8(a-h,o-z)
-	parameter (nmoll=8000,natmm=10000,ndimm=18000)
+	parameter (nmoll=4000,natmm=6000,ndimm=18000)
 	parameter(nemax=4)
 c nemax is maximal number of nearest neighbors allowed
 	common /unitc/ aerg,aev,acm1,atem,akm,amev,amu,ams,atim,aps
@@ -455,7 +456,7 @@ c HOH angle set to "true" water value ang, not tetrahedral 109
 C MAYBE BETTER TO USE TRUE ICE VALUE! BIGGER ANgle
 C AND LONGER BOND - LIKE IN ICE NOT TIPS2 GAS
 c bisector of H2O alligned along bisector of two OO vectors
-	parameter (nmoll=8000,natmm=10000,ndimm=18000)
+	parameter (nmoll=4000,natmm=6000,ndimm=18000)
 	parameter(nemax=4,nsmax=10000)
 c nsmax is max num of distinct structures expected to be found
 	implicit real*8(a-h,o-z)
@@ -832,7 +833,7 @@ C                                  FIRST EXECUTABLE STATEMENT
 	subroutine dist(nm,k1,nmm,k2,d)
 c min. image distance between atoms
 	implicit real*8(a-h,o-z)
-	parameter (nmoll=8000,natmm=10000,ndimm=18000)
+	parameter (nmoll=4000,natmm=6000,ndimm=18000)
 	common /xlattt/xlat(nmoll,9,2)
 	common/parambo/side(3)
 	dimension ve(3)
@@ -850,7 +851,7 @@ c min. image distance between atoms
 c write output config - everything in au except dipole
 c see subroutin hydro
 	implicit real*8(a-h,o-z)
-	parameter (nmoll=8000,natmm=10000,ndimm=18000)
+	parameter (nmoll=4000,natmm=6000,ndimm=18000)
 	common /xlattt/xlat(nmoll,9,2)
 	common/numbs/nmol,natm,ndim
 	common/parambo/side(3)
@@ -872,7 +873,7 @@ c including possibility of potl cutoff longer than 1/2 unit cell
 c using periodic boundary conditions
 c distance checkup on O only no H
 	implicit real*8(a-h,o-z)
-	parameter (nmoll=8000,natmm=10000,ndimm=18000)
+	parameter (nmoll=4000,natmm=6000,ndimm=18000)
 	common/numbs/nmol,natm,ndim
 c CAREFUL COMPLICATION OF INTERACTION WITH SELF IMAGE
 c factor 0.5 (?!)
@@ -1020,7 +1021,7 @@ c111	write(199,*)nm,eppo(nm)/akm
 c calculate interaction energy for collection of dipoles
 c each molecule represented as dipole
 	implicit real*8 (a-h,o-z)
-	parameter (nmoll=8000,natmm=10000,ndimm=18000)
+	parameter (nmoll=4000,natmm=6000,ndimm=18000)
 	common/parambo/side(3)
 	common/numbs/nmol,natm,ndim
 	common/xladip/xld(nmoll*2,6),dipm(nmoll,6)
